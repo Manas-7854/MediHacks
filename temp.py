@@ -6,9 +6,11 @@ from flask import Flask, render_template, request
 app = Flask(__name__)
 app.static_folder = 'static'
 
-total = 0
+@app.route("/")
+def home():
+    return render_template("index.html")
 
-
+count = 0
 
 # ------------------------------------------------------------- Model ------------------------------------------------------------------------------------- #
 
@@ -30,31 +32,26 @@ def load_model():
     label_encoder = LabelEncoder()
 
     # Load the model and tokenizer
-    model_path = "diagnostics_model/working/saved_model"
+    model_path = "kaggle/working/saved_model"
     print(f"Loading model from: {model_path}")
-    global model
     model = AutoModelForSequenceClassification.from_pretrained(model_path)
     print("Model loaded successfully.")
 
-    global tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     print("Tokenizer loaded successfully.")
 
-
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------- #
-@app.route("/")
-def home():
-    new = total
-    if new == 0:
-        load_model()
-        new += 1
-    return render_template("index.html")
 
 
 @app.route("/get")
 def get_bot_response():
-    
     userText = request.args.get('msg')
+    
+    # load the model on entry
+    if count == 0:
+        load_model()
+        count+=1
+    
     # GET PREDICTION FROM THE MODEL #
     input_text = userText
     print("User Input: "+input_text)
@@ -81,13 +78,8 @@ def get_bot_response():
     print(f"The predicted Disorder is: {predicted_class}")
     
     # RETURN THE PREDICTOIN
-    return "You have: " + predicted_class
+    return "The predicted Disorder is: " + predicted_class
 
 
 if __name__ == "__main__":
     app.run()
-    
-    
-    
-    
-    
