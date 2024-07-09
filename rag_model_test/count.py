@@ -2,7 +2,7 @@
 from pypdf import PdfReader 
 
 # Open the PDF file
-file_path = 'us_census/addiction.pdf'
+file_path = 'us_census/sample_conversation.pdf'
 pdf_file = open(file_path, 'rb')
 
 # Initialize PDF reader

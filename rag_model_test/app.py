@@ -8,9 +8,13 @@ from langchain.chains import create_retrieval_chain
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from dotenv import load_dotenv
+from langchain.memory import ConversationBufferMemory
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.chains import create_history_aware_retriever, create_retrieval_chain
+from langchain_core.chat_history import BaseChatMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
 import os
-load_dotenv()
 print("flag 1")
 
 ## load the GROQ And OpenAI API KEY 
@@ -22,17 +26,53 @@ os.environ["GOOGLE_API_KEY"]="AIzaSyAT2tXl0kKimGzB7VvLS5Ln7jaN_827xgA"
 llm=ChatGroq(groq_api_key=groq_api_key,
              model_name="mixtral-8x7b-32768")
 
-prompt=ChatPromptTemplate.from_template(
-"""
-Assume that you are a addiction health counsellor and counsel a patient based on the given context.
-Try to give as accurate answers as you can with respect to the context
-<context>
-{context}
-<context>
-Questions:{input}
+global store
+store = {}
 
-"""
+### Contextualize question ###
+contextualize_q_system_prompt = (
+    "Given a chat history and the latest user question "
+    "which might reference context in the chat history, "
+    "formulate a standalone question which can be understood "
+    "without the chat history. Do NOT answer the question, "
+    "just reformulate it if needed and otherwise return it as is."
 )
+
+contextualize_q_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", contextualize_q_system_prompt),
+        MessagesPlaceholder("chat_history"),
+        ("human", "{input}"),
+    ]
+)
+#########################################################
+
+
+
+### ANSWER QUESTION ####
+system_prompt=(
+
+"assume you are a mental health counselor, learn from the given sample conversation given to you as context"
+"and as the patient the right questions about their situation"
+"If you don't know the answer, say that you "
+"don't know. Use two sentences maximum and keep the "
+"answer concise."
+"\n\n"
+"{context}"
+
+)
+
+qa_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", system_prompt),
+        MessagesPlaceholder("chat_history"),
+        ("human", "{input}"),
+    ]
+)
+
+##############################################################
+
+
 print("flag 2")
 
 def vector_embedding():
@@ -62,15 +102,47 @@ import time
 while(True):
     
     prompt1=input("Enter Your Question From Doduments: ")
-
+    if prompt1 == "END":
+        print("_____________________________ CHAT HISTORY _______________________________________")
+        print(store)
+        break
     print("flag 3")
-
-    document_chain=create_stuff_documents_chain(llm,prompt)
+    
     retriever=vectors.as_retriever()
-    retrieval_chain=create_retrieval_chain(retriever,document_chain)
-    start=time.process_time()
-    response=retrieval_chain.invoke({'input':prompt1})
-    print("Response time :",time.process_time()-start)
+    
+    ## History Aware retriever
+    history_aware_retriever = create_history_aware_retriever(
+    llm, retriever, contextualize_q_prompt
+)   
+    # Question Answer Chain
+    question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
+    
+    #Final Rag Chain
+    rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
+    
+    ### Statefully manage chat history ###
+
+    def get_session_history(session_id: str) -> BaseChatMessageHistory:
+        if session_id not in store:
+            store[session_id] = ChatMessageHistory()
+        return store[session_id]
+    
+    conversational_rag_chain = RunnableWithMessageHistory(
+    rag_chain,
+    get_session_history,
+    input_messages_key="input",
+    history_messages_key="chat_history",
+    output_messages_key="answer",
+)
+    
+    
+    ### generate responses
+    response = conversational_rag_chain.invoke(
+    {"input": prompt1},
+    config={
+        "configurable": {"session_id": "abc123"}
+    },  # constructs a key "abc123" in `store`.
+)
     print(response['answer'])
     
     print("---------------------------------------------------------------------------------------------------")
