@@ -208,13 +208,13 @@ def home():
 
 @app.route("/counsel_addiction")
 def counselor_addiction():
-    print("flag addiction counsel")
-    disorder = "addiction"
-    print("Disorder Name:" + disorder)
-    InCounselor = True
-    print("Making Vector Store DB")
-    vector_embedding(disorder=disorder)
-    print("Vector Store DB Is Ready")
+    # print("flag addiction counsel")
+    # disorder = "addiction"
+    # print("Disorder Name:" + disorder)
+    # InCounselor = True
+    # print("Making Vector Store DB")
+    # vector_embedding(disorder=disorder)
+    # print("Vector Store DB Is Ready")
     return render_template("counsel.html")
 
 @app.route("/counsel_anxiety")
@@ -264,13 +264,13 @@ def get_bot_response():
         print("flag 2")
         total += 1
         userTextforPrediction += userText
-        return "Question 2?"
+        return "Can you share any recent events or experiences that might have triggered these feelings or symptoms?"
     if total == 2:
         print("flag 3")
         
         total += 1
         userTextforPrediction += userText
-        return "Question 3?"
+        return "Have you experienced any significant traumas in the past, or do you have any habits or behaviors that you think might be affecting your mental health ?"
     if total == 3:
         print("flag 4")
         

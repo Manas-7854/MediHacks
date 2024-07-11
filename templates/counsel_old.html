@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
   <html lang="en">
 
   <head>
@@ -7,10 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link href='https://fonts.googleapis.com/css?family=Merriweather' rel='stylesheet'>
-    <link href='https://fonts.googleapis.com/css?family=Playfair Display' rel='stylesheet'>
-    <link href='https://fonts.googleapis.com/css?family=Crimson Text' rel='stylesheet'>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/style.css') }}">
+    <link rel="stylesheet" href="style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   </head>
 
@@ -19,22 +16,22 @@
     <section class="msger">
       <header class="msger-header">
         <div class="msger-header-title">
-          AI-Powered Counseling Session
+          <i class="fas fa-bug"></i> Chatbot <i class="fas fa-bug"></i>
         </div>
       </header>
 
       <main class="msger-chat">
         <div class="msg left-msg">
-          <div class="msg-img" style="background-image: url('/static/img/Elisa.jpg')"></div>
+          <div class="msg-img" style="background-image: url(https://image.flaticon.com/icons/svg/327/327779.svg)"></div>
 
           <div class="msg-bubble">
             <div class="msg-info">
-              <div class="msg-info-name">Elisa</div>
-              <div class="msg-info-time"></div>
+              <div class="msg-info-name">Counselor</div>
+              <div class="msg-info-time">12:45</div>
             </div>
 
             <div class="msg-text">
-              Hi, welcome to MindMend, I am Elisa your personal AI Counsellor. How may I Help You?
+              Hi, welcome to MindMend Counselor. How Can I Help You?
             </div>
           </div>
         </div>
@@ -56,9 +53,9 @@
 
 
       // Icons made by Freepik from www.flaticon.com
-      const BOT_IMG = "/static/img/Elisa.jpg";
-      const PERSON_IMG = "/static/img/user2.png";
-      const BOT_NAME = "    Elisa";
+      const BOT_IMG = "https://image.flaticon.com/icons/svg/327/327779.svg";
+      const PERSON_IMG = "https://image.flaticon.com/icons/svg/145/145867.svg";
+      const BOT_NAME = "    ChatBot";
       const PERSON_NAME = "You";
 
       msgerForm.addEventListener("submit", event => {
