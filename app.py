@@ -6,13 +6,17 @@ from flask import Flask, render_template, request
 app = Flask(__name__)
 app.static_folder = 'static'
 
-total = 1
+total = -1
 model_loaded = False
 global userScore
 userScore = 0
+global disorder
+disorder = "common"
+global InCounselor
+InCounselor = False
 
 
-# ------------------------------------------------------------- Model ------------------------------------------------------------------------------------- #
+# ------------------------------------------------------------- Diagnostics Model ------------------------------------------------------------------------------------- #
 
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from sklearn.preprocessing import LabelEncoder
@@ -44,8 +48,155 @@ def load_model():
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------- #
-@app.route("/diagnosis")
+
+# --------------------------------------------------------------- Addiction Counselor ------------------------------------------------------------------------#
+# import streamlit as st
+import os
+from langchain_groq import ChatGroq
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_core.prompts import ChatPromptTemplate
+from langchain.chains import create_retrieval_chain
+from langchain_community.vectorstores import FAISS
+from langchain_community.document_loaders import PyPDFDirectoryLoader
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain.memory import ConversationBufferMemory
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.chains import create_history_aware_retriever, create_retrieval_chain
+from langchain_core.chat_history import BaseChatMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
+import os
+
+print("flag 1")
+
+## load the GROQ And OpenAI API KEY 
+groq_api_key="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"
+os.environ["GOOGLE_API_KEY"]="AIzaSyAT2tXl0kKimGzB7VvLS5Ln7jaN_827xgA"
+
+# st.title("Gemma Model Document Q&A")
+
+llm=ChatGroq(groq_api_key=groq_api_key,
+             model_name="llama3-70b-8192")
+
+global store
+store = {}
+
+### Contextualize question ###
+contextualize_q_system_prompt = (
+    "Given a chat history and the latest user question "
+    "which might reference context in the chat history, "
+    "formulate a standalone question which can be understood "
+    "without the chat history. Do NOT answer the question, "
+    "just reformulate it if needed and otherwise return it as is."
+)
+
+contextualize_q_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", contextualize_q_system_prompt),
+        MessagesPlaceholder("chat_history"),
+        ("human", "{input}"),
+    ]
+)
+#########################################################
+
+
+
+def vector_embedding(disorder):
+
+    # if "vectors" not in st.session_state:
+
+    global embeddings
+    embeddings=GoogleGenerativeAIEmbeddings(model = "models/embedding-001")
+    global loader
+    loader=PyPDFDirectoryLoader("context_for_RAG/"+disorder) ## Data Ingestion
+    print("Disorder Name:" + disorder)
+    global docs
+    docs=loader.load() ## Document Loading
+    global text_splitter
+    text_splitter=RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=200) ## Chunk Creation
+    global final_documents
+    final_documents=text_splitter.split_documents(docs[:20]) #splitting
+    global vectors
+    vectors=FAISS.from_documents(final_documents,embeddings) #vector OpenAI embeddings
+
+def counselor(prompt1):
+### ANSWER QUESTION ####
+    system_prompt=(
+
+    "assume you are a" + disorder + " mental health counselor, learn from the given sample conversation given to you as context"
+    "and as the patient the right questions about their situation"
+    "If you don't know the answer, say that you "
+    "don't know. Use two sentences maximum and keep the "
+    "answer concise."
+    "\n\n"
+    "{context}"
+
+    )
+
+    qa_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system_prompt),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{input}"),
+        ]
+    )
+        
+    retriever=vectors.as_retriever()
+    
+    ## History Aware retriever
+    history_aware_retriever = create_history_aware_retriever(
+    llm, retriever, contextualize_q_prompt
+)   
+    # Question Answer Chain
+    question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
+    
+    #Final Rag Chain
+    rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
+    
+    ### Statefully manage chat history ###
+
+    def get_session_history(session_id: str) -> BaseChatMessageHistory:
+        if session_id not in store:
+            store[session_id] = ChatMessageHistory()
+        return store[session_id]
+    
+    conversational_rag_chain = RunnableWithMessageHistory(
+    rag_chain,
+    get_session_history,
+    input_messages_key="input",
+    history_messages_key="chat_history",
+    output_messages_key="answer",
+)
+    
+    
+    ### generate responses
+    response = conversational_rag_chain.invoke(
+    {"input": prompt1},
+    config={
+        "configurable": {"session_id": "abc123"}
+    },  # constructs a key "abc123" in `store`.
+)
+    return response['answer']
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------- #
+
+@app.route("/",  methods=["GET", "POST"])
+def landing():
+    return render_template("landing.html")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    return render_template("login.html")
+
+@app.route("/signup",  methods=["GET", "POST"])
+def signup():
+    return render_template("signup.html")
+
+@app.route("/diagnosis",  methods=["GET", "POST"])
 def home():
+    InCounselor = False
     print("flag bruh")
     global total
     global model_loaded
@@ -53,7 +204,48 @@ def home():
         load_model()
         model_loaded=True
     total = 1
-    return render_template("index.html")
+    return render_template("diagnosis.html")
+
+@app.route("/counsel_addiction")
+def counselor_addiction():
+    print("flag addiction counsel")
+    disorder = "addiction"
+    print("Disorder Name:" + disorder)
+    InCounselor = True
+    print("Making Vector Store DB")
+    vector_embedding(disorder=disorder)
+    print("Vector Store DB Is Ready")
+    return render_template("counsel.html")
+
+@app.route("/counsel_anxiety")
+def counselor_anxiety():
+    print("flag anxiety counsel")
+    disorder = "anxiety"
+    InCounselor = True
+    print("Making Vector Store DB")
+    vector_embedding(disorder=disorder)
+    print("Vector Store DB Is Ready")
+    return render_template("counsel.html")
+
+@app.route("/counsel_depression")
+def counselor_depression():
+    print("flag depression counsel")
+    disorder = "depression"
+    InCounselor = True
+    print("Making Vector Store DB")
+    vector_embedding(disorder=disorder)
+    print("Vector Store DB Is Ready")
+    return render_template("counsel.html")
+
+@app.route("/counsel_PTSD")
+def counselor_PTSD():
+    print("flag PTSD counsel")
+    disorder = "PTSD"
+    InCounselor = True
+    print("Making Vector Store DB")
+    vector_embedding(disorder=disorder)
+    print("Vector Store DB Is Ready")
+    return render_template("counsel.html")
 
 userTextforPrediction = " "
 
@@ -149,6 +341,7 @@ def get_bot_response():
                 total += 1
                 return "Feeling afraid, as if something awful might happen "
             if total == 10:
+                total = -1
                 if userScore >=0 and userScore <= 4:
                     return "The Severity of your Anxiety Disorder is Minimal.<br>You can refer to professional help or You can also try our Anxiety Health Counsellor"
                 if userScore >=5 and userScore <= 9:
@@ -187,6 +380,7 @@ def get_bot_response():
                 total += 1
                 return "Felt guilty or unable to stop blaming yourself or others for the event or any problems the event may have caused"
             if total == 9:
+                total = -1
                 if userScore >=0 and userScore < 3:
                     return "The Severity of your PTSD Disorder is Mild.<br>You can refer to professional help or You can also try our PTSD Health Counsellor"
                 if userScore >=3:
@@ -226,6 +420,7 @@ def get_bot_response():
                 total += 1
                 return "Thoughts that you would be better off dead, or of hurting yourself"
             if total == 12:
+                total = -1
                 userScore+= (int)(userText)
                 if userScore >=0 and userScore <= 4:
                     return "The Severity of your Depression Disorder is Minimal.<br>You can refer to professional help or You can also try our Depression Health Counsellor"
@@ -276,6 +471,7 @@ def get_bot_response():
                 total += 1
                 return "How often do you feel guilty or ashamed about your use of the substance or engagement in the behavior?"                        
             if total == 13:
+                total = -1
                 userScore += (int)(userText)
                 if userScore >=0 and userScore <= 6:
                     return "The Severity of your Addiction Disorder is Mild.<br>You can refer to professional help or You can also try our Addiction Health Counsellor"
@@ -286,6 +482,11 @@ def get_bot_response():
                 if userScore >=25 and userScore <= 30:
                     return "The Severity of your Addiction` Disorder is Severe.<br>You can try our Addiction Health Counsellor, but I strongly recommend taking professional help"
     
+
+    # this means we are in the counselor now, take the user intput give it to the rag model and generate the output 
+    if total == -1:
+        rag_model_output = counselor(userText)
+        return rag_model_output
     
     return "Thankyou for using out website. Refresh the page for another diagnosis"                  
                 
