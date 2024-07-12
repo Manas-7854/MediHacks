@@ -16,6 +16,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true  # Enable LFS support during checkout
 
       - name: Set up Python version
         uses: actions/setup-python@v5
@@ -61,7 +63,15 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      
+      - name: Install Git LFS
+        run: |
+          curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+          sudo apt-get install git-lfs
+          git lfs install
+
+      - name: Pull LFS files
+        run: git lfs pull
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -75,4 +85,3 @@ jobs:
         with:
           app-name: 'MindAid'
           slot-name: 'Production'
-          
