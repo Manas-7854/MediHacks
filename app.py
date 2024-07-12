@@ -497,9 +497,8 @@ def get_bot_response():
     return "Thankyou for using out website. Refresh the page for another diagnosis"                  
                 
 
-if __name__ == "__main__":
-    app.run()
-    
+if _name_ == "_main_":
+    app.run(host="0.0.0.0", port=8000)
     
     
     
