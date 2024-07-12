@@ -31,6 +31,9 @@
 }
 
 .session{
-    display: flex;
+    /* display: flex; */
+    display: grid;
+    grid-template-rows:1fr;
+    grid-template-columns: 1fr 1fr 6fr;
     border: 2px solid blue;
 }

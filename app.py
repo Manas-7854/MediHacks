@@ -229,7 +229,7 @@ def signup():
 
 @app.route("/home",  methods=["GET", "POST"])
 def home():
-    return render_template("home1.html")
+    return render_template("home.html")
 
 
 @app.route("/diagnosis",  methods=["GET", "POST"])
