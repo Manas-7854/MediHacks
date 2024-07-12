@@ -296,11 +296,12 @@ def get_bot_response():
         logits = outputs.logits
         print(logits)
 
-            # Given tensor
-        output = torch.tensor(logits)
+        # Convert the logits tensor to a NumPy array
+        logits_np = logits.detach().numpy()
 
-        # Find the index with the maximum value
-        max_index = torch.argmax(output, dim=1).item()
+        # Find the index with the maximum value using NumPy
+        max_index = np.argmax(logits_np, axis=1)[0]
+        print(max_index)
 
         # Define the class labels
         class_labels = ["Addiction", "Anxiety", "Depression", "PTSD"]
