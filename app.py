@@ -1,7 +1,26 @@
-import numpy as np
-import json
-
-from flask import Flask, render_template, request
+import os
+from flask import Flask, render_template, request, redirect, session
+import sqlite3
+import hashlib
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from sklearn.preprocessing import LabelEncoder
+import torch
+from torch.utils.data import DataLoader
+from transformers import AutoModelForSequenceClassification, AdamW, get_scheduler
+from langchain_groq import ChatGroq
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_core.prompts import ChatPromptTemplate
+from langchain.chains import create_retrieval_chain
+from langchain_community.vectorstores import FAISS
+from langchain_community.document_loaders import PyPDFDirectoryLoader
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain.memory import ConversationBufferMemory
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.chains import create_history_aware_retriever, create_retrieval_chain
+from langchain_core.chat_history import BaseChatMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
 
 app = Flask(__name__)
 app.static_folder = 'static'
@@ -15,20 +34,10 @@ disorder = "common"
 global InCounselor
 InCounselor = False
 
+salt = 'siddhart'
+
 
 # ------------------------------------------------------------- Diagnostics Model ------------------------------------------------------------------------------------- #
-
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-from sklearn.preprocessing import LabelEncoder
-
-import torch
-import numpy as np
-
-import pandas as pd
-from datasets import Dataset
-
-from torch.utils.data import DataLoader
-from transformers import AutoModelForSequenceClassification, AdamW, get_scheduler
 
 def load_model():
     print("Loading Model.....")
@@ -46,27 +55,10 @@ def load_model():
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     print("Tokenizer loaded successfully.")
 
-
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------- #
 
 # --------------------------------------------------------------- Addiction Counselor ------------------------------------------------------------------------#
 # import streamlit as st
-import os
-from langchain_groq import ChatGroq
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import ChatPromptTemplate
-from langchain.chains import create_retrieval_chain
-from langchain_community.vectorstores import FAISS
-from langchain_community.document_loaders import PyPDFDirectoryLoader
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain.memory import ConversationBufferMemory
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.chains import create_history_aware_retriever, create_retrieval_chain
-from langchain_core.chat_history import BaseChatMessageHistory
-from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain_core.runnables.history import RunnableWithMessageHistory
-import os
 
 print("flag 1")
 
@@ -188,14 +180,60 @@ def landing():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    return render_template("login.html")
+    if request.method == "POST":
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        
+        name = request.form['name']
+        password = request.form['password']
+        
+        password = hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
+        
+        query = "SELECT username, password FROM users where username= '"+name+"' and password='"+password+"' "
+        cursor.execute(query)
+        
+        results = cursor.fetchall()
+        
+        print(results)
+        
+        if len(results) == 0:
+            return render_template("login.html", error=True)
+        else:
+            return redirect("/home")
+        
+    return render_template("login.html", error=False)
 
 @app.route("/signup",  methods=["GET", "POST"])
 def signup():
+    if request.method == "POST":
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        
+        firstname = request.form['firstn']
+        lastname = request.form['lastn']
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        disorder = "none"
+        
+        print(firstname, lastname, username, email, password)
+        
+        password = hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
+        
+        query = " INSERT INTO users VALUES ('"+username+"' , '"+password+"' , '"+disorder+"', '"+firstname+"', '"+lastname+"') "
+        cursor.execute(query)
+        connection.commit()
+        
+        return redirect("/home")
     return render_template("signup.html")
 
-@app.route("/diagnosis",  methods=["GET", "POST"])
+@app.route("/home",  methods=["GET", "POST"])
 def home():
+    return render_template("home1.html")
+
+
+@app.route("/diagnosis",  methods=["GET", "POST"])
+def dianosis():
     InCounselor = False
     print("flag bruh")
     global total
