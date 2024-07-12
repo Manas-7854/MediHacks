@@ -151,8 +151,6 @@ nltk                          == 3.8.1
 notebook                      == 7.1.0
 notebook_shim                 == 0.2.4
 oauthlib                      == 3.2.0
-opencv-python                 == 4.9.0.80
-opencv-python-headless        == 4.9.0.80
 opt-einsum                    == 3.3.0
 optree                        == 0.11.0
 orjson                        == 3.10.6
