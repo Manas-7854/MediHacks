@@ -1,0 +1,36 @@
+
+.header{
+    width: 100%;
+    margin-bottom: 1em;
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: 2fr 1fr;
+    grid-template-areas: 'welcome links';
+    border: 2px solid brown;
+}
+.welcome-msg{
+    grid-area: welcome;
+    background-color: blueviolet;
+    margin: 1vw;
+    border: 2px solid brown;
+
+}
+.links{
+    grid-area: links;
+    background-color: green;
+    margin: 1vw;
+    border: 2px solid brown;
+
+}
+
+.content{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    border: 2px solid brown;
+}
+
+.session{
+    display: flex;
+    border: 2px solid blue;
+}

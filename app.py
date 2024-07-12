@@ -102,15 +102,15 @@ contextualize_q_prompt = ChatPromptTemplate.from_messages(
 
 
 
-def vector_embedding(disorder):
+def vector_embedding():
 
     # if "vectors" not in st.session_state:
 
     global embeddings
     embeddings=GoogleGenerativeAIEmbeddings(model = "models/embedding-001")
     global loader
-    loader=PyPDFDirectoryLoader("context_for_RAG/"+disorder) ## Data Ingestion
-    print("Disorder Name:" + disorder)
+    loader=PyPDFDirectoryLoader("context_for_RAG/") ## Data Ingestion
+    
     global docs
     docs=loader.load() ## Document Loading
     global text_splitter
@@ -124,7 +124,7 @@ def counselor(prompt1):
 ### ANSWER QUESTION ####
     system_prompt=(
 
-    "assume you are a" + disorder + " mental health counselor, learn from the given sample conversation given to you as context"
+    "assume you are a mental health counselor, learn from the given sample conversation given to you as context"
     "and as the patient the right questions about their situation"
     "If you don't know the answer, say that you "
     "don't know. Use two sentences maximum and keep the "
@@ -206,44 +206,13 @@ def home():
     total = 1
     return render_template("diagnosis.html")
 
-@app.route("/counsel_addiction")
-def counselor_addiction():
-    # print("flag addiction counsel")
-    # disorder = "addiction"
-    # print("Disorder Name:" + disorder)
-    # InCounselor = True
-    # print("Making Vector Store DB")
-    # vector_embedding(disorder=disorder)
-    # print("Vector Store DB Is Ready")
-    return render_template("counsel.html")
 
-@app.route("/counsel_anxiety")
+
+@app.route("/counsel")
 def counselor_anxiety():
-    print("flag anxiety counsel")
-    disorder = "anxiety"
     InCounselor = True
     print("Making Vector Store DB")
-    vector_embedding(disorder=disorder)
-    print("Vector Store DB Is Ready")
-    return render_template("counsel.html")
-
-@app.route("/counsel_depression")
-def counselor_depression():
-    print("flag depression counsel")
-    disorder = "depression"
-    InCounselor = True
-    print("Making Vector Store DB")
-    vector_embedding(disorder=disorder)
-    print("Vector Store DB Is Ready")
-    return render_template("counsel.html")
-
-@app.route("/counsel_PTSD")
-def counselor_PTSD():
-    print("flag PTSD counsel")
-    disorder = "PTSD"
-    InCounselor = True
-    print("Making Vector Store DB")
-    vector_embedding(disorder=disorder)
+    vector_embedding()
     print("Vector Store DB Is Ready")
     return render_template("counsel.html")
 
@@ -431,7 +400,7 @@ def get_bot_response():
                 if userScore >=15 and userScore <= 19:
                     return "The Severity of your Depression Disorder is Moderately Severe.<br>You can try our Depression Health Counsellor, but I strongly recommend taking professional help"
                 if userScore >=20 and userScore <= 27:
-                    return "The Severity of your Depression Disorder is Quite Severe.<br>YI strongly recommend taking professional help however you can also try our Depression Health Counsellor"                
+                    return "The Severity of your Depression Disorder is Quite Severe.<br>I strongly recommend taking professional help however you can also try our Depression Health Counsellor"                
        
         if predicted_class == "Addiction":
             if total == 4:  
