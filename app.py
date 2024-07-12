@@ -4,8 +4,6 @@ import sqlite3
 import hashlib
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from sklearn.preprocessing import LabelEncoder
-import torch
-from torch.utils.data import DataLoader
 from transformers import AutoModelForSequenceClassification, AdamW, get_scheduler
 from langchain_groq import ChatGroq
 from langchain.text_splitter import RecursiveCharacterTextSplitter
