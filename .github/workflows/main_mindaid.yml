@@ -89,7 +89,3 @@ jobs:
         with:
           app-name: 'MindAid'
           slot-name: 'Production'
-
-        with:
-          app-name: 'MindAid'
-          slot-name: 'Production'
