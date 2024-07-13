@@ -16,8 +16,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          lfs: true  # Enable LFS support during checkout
 
       - name: Set up Python version
         uses: actions/setup-python@v5
@@ -35,7 +33,7 @@ jobs:
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
-        run: zip -r release.zip ./*
+        run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
@@ -52,40 +50,29 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write  # This is required for requesting the JWT
+      id-token: write #This is required for requesting the JWT
 
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v4
-        with:
-          lfs: true  # Ensure LFS files are included during checkout
-
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
 
       - name: Unzip artifact for deployment
-        run: yes n | unzip release.zip
+        run: unzip release.zip
 
-      - name: Install Git LFS
-        run: |
-          curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
-          sudo apt-get install git-lfs
-          git lfs install
-
-      - name: Pull LFS files
-        run: git lfs pull
-
+      
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_849336FDF2B54C05BB35D11F72B3F647 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6397D15798A4485FBDBD99E86BF0AC9B }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5208E125F63D42C38F8CCEC16CA6796A }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CEB9E722ED7A42EB8287082EDBE1A0FD }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_218A01036E864B1C9EA365A435748900 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F75519B73CAA42F6A5AC985608525329 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
         with:
           app-name: 'MindAid'
           slot-name: 'Production'
+          
