@@ -232,14 +232,22 @@ def home():
 
 @app.route("/diagnosis",  methods=["GET", "POST"])
 def dianosis():
+    print("flag: entered")
     InCounselor = False
     print("flag bruh")
     global total
+    print("flag: a")
     global model_loaded
+    print("loading model")
     if not model_loaded:
         load_model()
+        print("loaded the model")
         model_loaded=True
+        print("updated the load_model variable")
+
+    print("setting total value")
     total = 1
+    print("return template")
     return render_template("diagnosis.html")
 
 
