@@ -2,7 +2,7 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-name: Build and deploy Python app to Azure Web App - MindAid
+name: Build and deploy Python app to Azure Web App - MIndAid
 
 on:
   push:
@@ -16,13 +16,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          lfs: true  # Enable LFS support during checkout
 
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.10'
 
       - name: Create and start virtual environment
         run: |
@@ -35,7 +33,7 @@ jobs:
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
-        run: zip -r release.zip ./*
+        run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
@@ -52,40 +50,29 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write  # This is required for requesting the JWT
+      id-token: write #This is required for requesting the JWT
 
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v4
-        with:
-          lfs: true  # Ensure LFS files are included during checkout
-
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
 
       - name: Unzip artifact for deployment
-        run: yes n | unzip release.zip
+        run: unzip release.zip
 
-      - name: Install Git LFS
-        run: |
-          curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
-          sudo apt-get install git-lfs
-          git lfs install
-
-      - name: Pull LFS files
-        run: git lfs pull
-
+      
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_849336FDF2B54C05BB35D11F72B3F647 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6397D15798A4485FBDBD99E86BF0AC9B }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5208E125F63D42C38F8CCEC16CA6796A }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_8656B0ABC4BF45DEA0E9E74A498D9687 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F6C69606023E4F2D992CF07F7A979833 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3B86D9BDAF5F4A6F8FC27D3AF1AFB810 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
         with:
-          app-name: 'MindAid'
+          app-name: 'MIndAid'
           slot-name: 'Production'
+          
