@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Python version
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v1
         with:
           python-version: '3.10'
 
@@ -36,7 +36,7 @@ jobs:
         run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment jobs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: python-app
           path: |
@@ -54,7 +54,7 @@ jobs:
 
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v3
         with:
           name: python-app
 
@@ -63,14 +63,14 @@ jobs:
 
       
       - name: Login to Azure
-        uses: azure/login@v2
+        uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BFC4DAA673414B16956F491B6D9699D0 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_182290F89C9E4E59827455C71177FFFB }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_901F5569E19940CBB3CD9FCB3DB745C2 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BD55538E9FD54E2896270FFE0F8D6EAB }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B365E7CBFEC447CF87CB6D673B6CACFA }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5FB9D92DEFAD4AA9907C86A0388E723A }}
 
       - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
           app-name: 'MindAid'
