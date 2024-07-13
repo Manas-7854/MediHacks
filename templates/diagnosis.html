@@ -34,7 +34,7 @@
             </div>
             
             <div class="msg-text">
-              Hi, welcome to MindAid diagnosis.
+              Hi {{ username }}, welcome to MindAid diagnosis.
               I will ask some questions to diagnose your problem.
               Can you describe the feelings that you are currently experiencing ?
             </div>
@@ -53,10 +53,10 @@
   </div>
   <div class="header">
       <button class="btn">
-        <a href="">Counselor</a>
+        <a href="{{ url_for('counsel') }}">Counselor</a>
       </button>
       <button class="btn">
-      <a href="">Home</a>
+      <a href="{{ url_for('home') }}">Home</a>
     </button>
   </div>
   <!-- partial -->

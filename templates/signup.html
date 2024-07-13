@@ -49,7 +49,7 @@
             padding: 30px 40px;
             z-index: 2;
             box-shadow: 1px 1px 2px #464f6f88,
-            -1px -1px 2px #464f6f88;
+                -1px -1px 2px #464f6f88;
         }
 
         .wrapper h1 {
@@ -139,9 +139,13 @@
 
 <body>
     <div class="wrapper">
+
         <h1>Create an Account</h1>
         <p style="padding-bottom: 25px;" class="register-link">Already have an account? <a
                 href="{{url_for('login')}}">Login</a></p>
+        {% if error %}
+        <h3 style="margin-left: 3.5em;">"Username Already Exists"</h3>
+        {% endif %}
 
         <form method="post">
             <div class="row">
