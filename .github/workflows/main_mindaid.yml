@@ -2,7 +2,7 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-name: Build and deploy Python app to Azure Web App - MindAid
+name: Build and deploy Python app to Azure Web App - MIndAid
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Python version
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -36,7 +36,7 @@ jobs:
         run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment jobs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: python-app
           path: |
@@ -54,7 +54,7 @@ jobs:
 
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: python-app
 
@@ -63,16 +63,16 @@ jobs:
 
       
       - name: Login to Azure
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BD55538E9FD54E2896270FFE0F8D6EAB }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B365E7CBFEC447CF87CB6D673B6CACFA }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5FB9D92DEFAD4AA9907C86A0388E723A }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_8656B0ABC4BF45DEA0E9E74A498D9687 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F6C69606023E4F2D992CF07F7A979833 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3B86D9BDAF5F4A6F8FC27D3AF1AFB810 }}
 
       - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: 'MindAid'
+          app-name: 'MIndAid'
           slot-name: 'Production'
           
