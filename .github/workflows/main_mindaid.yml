@@ -12,27 +12,24 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04  # Use a larger runner if available
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          lfs: true  # Enable LFS support
+      - uses: actions/checkout@v4
 
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.10'
 
       - name: Create and start virtual environment
         run: |
           python -m venv venv
           source venv/bin/activate
-
+      
       - name: Install dependencies
         run: pip install -r requirements.txt
-
+        
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
@@ -47,13 +44,13 @@ jobs:
             !venv/
 
   deploy:
-    runs-on: ubuntu-20.04  # Use a larger runner if available
+    runs-on: ubuntu-latest
     needs: build
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write  # This is required for requesting the JWT
+      id-token: write #This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
@@ -64,14 +61,15 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
+      
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CEB9E722ED7A42EB8287082EDBE1A0FD }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_218A01036E864B1C9EA365A435748900 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F75519B73CAA42F6A5AC985608525329 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BFC4DAA673414B16956F491B6D9699D0 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_182290F89C9E4E59827455C71177FFFB }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_901F5569E19940CBB3CD9FCB3DB745C2 }}
 
-      - name: Deploy to Azure Web App
+      - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
