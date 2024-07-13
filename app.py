@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, request, redirect, session
 import sqlite3
 import hashlib
+import numpy as np
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from sklearn.preprocessing import LabelEncoder
 from transformers import AutoModelForSequenceClassification, AdamW, get_scheduler
