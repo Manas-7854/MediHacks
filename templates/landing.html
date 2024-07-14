@@ -106,7 +106,7 @@
         background-color: #b6c5d3dd;
         /* font-family: inherit; */
         /* display: inline-block; */
-        width: 10em;
+        width: 15em;
         height: 3.4em;
         line-height: 2.5em;
         margin: 20px;
@@ -126,7 +126,7 @@
         z-index: -1;
         background: var(--color);
         height: 150px;
-        width: 200px;
+        width: 20em;
         border-radius: 50%;
     }
 
@@ -149,6 +149,10 @@
         border: none;
         transition: background 0s;
     }
+    .links{
+        display: flex;
+        flex-direction: row;
+    }
 </style>
 
 <body>
@@ -159,7 +163,11 @@
         <h3 id="desc">Welcome to MindAid, your dedicated online platform for accessible and compassionate mental health
             support powered by advanced AI models. We're here to provide personalized care and a wealth of
             resources, guiding you towards a healthier, happier mind.</h3>
-        <button ><a href="{{ url_for('login') }}">Login/SignUp</a></button>
+
+        <div class="links">
+            <button ><a href="{{ url_for('login') }}">Login/SignUp (Patient) </a></button>
+            <button ><a href="{{ url_for('doctor_login') }}">Login/SignUp (Doctor) </a></button>
+        </div>
 
     </div>
 

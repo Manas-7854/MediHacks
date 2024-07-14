@@ -30,6 +30,7 @@ app.config['InDiagnosis'] = False
 app.config['userText_diagnosis'] = " "
 app.config['Vector_DB_loaded'] = False
 app.config['username'] = "NA"
+app.config['doctor_username'] = "NA"
 
 print("Flag: started flask app")
 
@@ -110,11 +111,12 @@ def counselor(prompt1):
 ### ANSWER QUESTION ####
     system_prompt=(
 
-    "assume you are a mental health counselor, learn from the given sample conversation given to you as context"
-    "and as the patient the right questions about their situation"
-    "If you don't know the answer, say that you "
-    "don't know. Use two sentences maximum and keep the "
-    "answer concise."
+    "assume you are a mental health counselor, learn from the counselling teachnique and sample conversation given to you "
+    "and ask the patient the right questions about their situation."
+    "If you don't know the answer, say that you don't know."
+    "Use two sentences maximum and keep the answer concise."
+    "When you feel that the patient is satisfied, end the conversation."
+    "Counselling teachnique and sample conversation : "
     "\n\n"
     "{context}"
 
@@ -226,8 +228,66 @@ def signup():
         connection.commit()
         
         app.config['username'] = username
-        return redirect("/home")
+        return redirect("/")
     return render_template("signup.html", error=False)
+
+@app.route("/doctor_signup",  methods=["GET", "POST"])
+def doctor_signup():
+    if request.method == "POST":
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        
+        firstname = request.form['firstn']
+        lastname = request.form['lastn']
+        username = request.form['username']
+        password = request.form['password']
+        qualification = request.form['qualification']
+        fees = request.form['fees']
+        
+        query = "SELECT username FROM users WHERE username = '"+username+"'";
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        if len(results) != 0:
+            return render_template("doctor_signup.html", error=True)
+        
+        print(firstname, lastname, username, qualification, password, fees)
+        
+        password = hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
+        
+        query = " INSERT INTO doctors VALUES ('"+username+"' , '"+password+"' ,'"+firstname+"', '"+lastname+"', '"+fees+"', '"+qualification+"') "
+        cursor.execute(query)
+        connection.commit()
+        
+        app.config['doctor_username'] = username
+        return redirect("/doctor_home")
+    return render_template("doctor_signup.html", error=False)
+
+@app.route("/doctor_login", methods=["GET", "POST"])
+def doctor_login():
+    if request.method == "POST":
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        
+        name = request.form['name']
+        password = request.form['password']
+        
+        password = hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
+        
+        query = "SELECT username, password FROM doctors where username= '"+name+"' and password='"+password+"' "
+        cursor.execute(query)
+        
+        results = cursor.fetchall()
+        
+        print(results)
+        
+        if len(results) == 0:
+            return render_template("login.html", error=True)
+        else:
+            app.config['doctor_username'] = name
+            return redirect("/doctor_home")
+        
+    return render_template("doctor_login.html", error=False)
 
 @app.route("/home",  methods=["GET", "POST"])
 def home():
@@ -259,6 +319,25 @@ def home():
     
     return render_template("home.html", username=app.config['username'], date=date, diagnosed = diagnosed, severity=severity, disorder=disorder, counsled=counsled)
 
+@app.route("/doctor_home", methods=['GET', 'POST'])
+def doctor_home():
+    if app.config['doctor_username'] == "NA":
+        return redirect("/")
+    connection = sqlite3.connect("database.db")
+    cursor = connection.cursor()
+    
+    name = app.config['doctor_username']
+    query = "SELECT firstname, lastname, qualification FROM doctors WHERE username='"+name+"'"
+    cursor.execute(query)
+    
+    data = cursor.fetchall()
+    print(data) 
+    
+    firstname = data[0][0]
+    lastname = data[0][1]
+    qualification = data[0][2]
+
+    return render_template("doctor_home.html", firstname=firstname, lastname=lastname, qualification = qualification)
 
 @app.route("/diagnosis",  methods=["GET", "POST"])
 def diagnosis():
