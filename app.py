@@ -1,12 +1,9 @@
 import os
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect
 import sqlite3
 import hashlib
-import numpy as np
+import tensorflow as tf
 from datetime import date
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-from sklearn.preprocessing import LabelEncoder
-from transformers import AutoModelForSequenceClassification, AdamW, get_scheduler
 from langchain_groq import ChatGroq
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -15,12 +12,12 @@ from langchain.chains import create_retrieval_chain
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain.memory import ConversationBufferMemory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from transformers import TFAutoModelForSequenceClassification, AutoTokenizer
 
 app = Flask(__name__)
 app.static_folder = 'static'
@@ -40,21 +37,20 @@ salt = '4f3d2e5b9a7c1d8e6f2b4a8c3e5d7f1a0b9c2d3e6a5b4c8d7f9a0e6c5b8d7f1'
 
 # ------------------------------------------------------------- Diagnostics Model ------------------------------------------------------------------------------------- #
 
+
 def load_model():
-    print("Loading Model.....")
     
-    label_encoder = LabelEncoder()
-
-    # Load the model and tokenizer
-    model_path = "diagnostics_model/working/saved_model"
-    print(f"Loading model from: {model_path}")
+    print("Loading Model.....")
+    model_path = "SiddharthShukla48/MindAid_Diagnosis_bert-base-multilingual-cased"
+    
     global model
-    model = AutoModelForSequenceClassification.from_pretrained(model_path)
+    model = TFAutoModelForSequenceClassification.from_pretrained(model_path)
     print("Model loaded successfully.")
-
+    
     global tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     print("Tokenizer loaded successfully.")
+
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------- #
 
@@ -236,7 +232,7 @@ def signup():
 @app.route("/home",  methods=["GET", "POST"])
 def home():
     if app.config['username'] == "NA":
-        return redirect("/home")
+        return redirect("/")
     connection = sqlite3.connect("database.db")
     cursor = connection.cursor()
     
@@ -267,7 +263,7 @@ def home():
 @app.route("/diagnosis",  methods=["GET", "POST"])
 def diagnosis():
     if app.config['username'] == "NA":
-        return redirect("/home")
+        return redirect("/")
     app.config['InDiagnosis'] = True
     app.config['InCounselor'] = False
     app.config['userScore'] = 0
@@ -287,10 +283,9 @@ def diagnosis():
 @app.route("/counsel")
 def counsel():
     if app.config['username'] == "NA":
-        return redirect("/home")
+        return redirect("/")
     app.config['InCounselor'] = True
     app.config['InDiagnosis'] = False
-    app.config['Vector_DB_loaded'] = False
     global store
     store = {}
     
@@ -317,7 +312,7 @@ def counsel():
 @app.route("/history")
 def history():
     if app.config['username'] == "NA":
-        return redirect("/home")
+        return redirect("/")
     
     connection = sqlite3.connect("database.db")
     cursor = connection.cursor()
@@ -373,25 +368,25 @@ def get_bot_response():
             
             print("User Input: "+input_text)
             
-            inputs = tokenizer(input_text, return_tensors="pt")
+            
+            inputs = tokenizer(input_text, return_tensors="tf", padding=True, truncation=True)
+            print("Tokenized input:", inputs)
             
             outputs = model(**inputs)
+            print("Model outputs:", outputs)
             
             logits = outputs.logits
             print(logits)
 
-            # Convert the logits tensor to a NumPy array
-            logits_np = logits.detach().numpy()
-
             # Find the index with the maximum value using NumPy
-            max_index = np.argmax(logits_np, axis=1)[0]
+            max_index = tf.argmax(logits, axis=-1).numpy()
             print(max_index)
 
             # Define the class labels
             class_labels = ["Addiction", "Anxiety", "Depression", "PTSD"]
 
             # Get the class label based on the index
-            predicted_class = class_labels[max_index]
+            predicted_class = class_labels[max_index[0]]
 
             print(f"The predicted Disorder is: {predicted_class}")
             
