@@ -228,7 +228,7 @@ def signup():
         connection.commit()
         
         app.config['username'] = username
-        return redirect("/")
+        return redirect("/home")
     return render_template("signup.html", error=False)
 
 @app.route("/doctor_signup",  methods=["GET", "POST"])
