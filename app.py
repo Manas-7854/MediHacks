@@ -244,7 +244,7 @@ def doctor_signup():
         qualification = request.form['qualification']
         fees = request.form['fees']
         
-        query = "SELECT username FROM users WHERE username = '"+username+"'";
+        query = "SELECT username FROM doctors WHERE username = '"+username+"'";
         cursor.execute(query)
         results = cursor.fetchall()
         
@@ -365,10 +365,13 @@ def counsel():
         return redirect("/")
     app.config['InCounselor'] = True
     app.config['InDiagnosis'] = False
+    
+    connection = sqlite3.connect("database.db")
+    cursor = connection.cursor()
+
     global store
     store = {}
-    
-    
+
     if not app.config['Vector_DB_loaded']:
         print("Making Vector Store DB")
         vector_embedding()
@@ -379,8 +382,6 @@ def counsel():
     print(type(today))
     print("Today's Date: "+ today)
     
-    connection = sqlite3.connect("database.db")
-    cursor = connection.cursor()
     
     query = "UPDATE users SET date = ? WHERE username = ?"
     cursor.execute(query, (today, app.config['username']))
@@ -408,6 +409,7 @@ def history():
 @app.route("/logout")
 def logout():
     app.config['username'] = "NA"
+    app.config['doctor_username'] = "NA"
     return redirect("/")
 
 @app.route("/doctor")
